@@ -1,0 +1,261 @@
+include "global.tbh"
+'--------------------------------------------------------------------
+
+'WLN CONSTANTS
+
+dim WLN_NAME as string="NETGEAR"			'<----- CHANGE THIS AS NEEDED
+dim WIRELESS_KEY as string=""				'<----- CHANGE THIS AS NEEDED
+dim ETHERNET_IP as string="192.168.1.200"	'<----- CHANGE THIS AS NEEDED
+dim WLN_IP as string="192.168.1.201"		'<----- CHANGE THIS AS NEEDED
+
+
+'GPRS CONSTANTS
+
+const GPRS_AT_DT_COMMAND="*99#"				'<----- CHANGE THIS AS NEEDED
+const GPRS_APN="AccessPointName"			'<----- CHANGE THIS AS NEEDED
+const GPRS_USERNAME="Username"				'<----- CHANGE THIS AS NEEDED
+const GPRS_PASSWORD="Password"				'<----- CHANGE THIS AS NEEDED
+const REMOTE_IP="124.155.161.141"			'<----- CHANGE THIS AS NEEDED
+const REMOTE_PORT=1001                      '<----- CHANGE THIS AS NEEDED
+
+dim tcp_sock_o as byte
+
+'====================================================================
+
+sub on_sys_init()
+	
+	dim length as byte
+	dim res as en_gprs_status_codes
+	dim f as byte
+	
+	
+	
+	if stor.getdata(1,5)<>"TIBBO" then
+		process_EEPROM(WLN_NAME,ETHERNET_IP,WIRELESS_KEY,WLN_IP)
+	end if
+		
+	length=asc(stor.getdata(64*1,1))
+	WLN_NAME = stor.getdata((64*1)+1,length)
+	
+	length=asc(stor.getdata(64*2,1))
+	ETHERNET_IP = stor.getdata((64*2)+1,length)
+	
+	length=asc(stor.getdata(64*3,1))
+	WIRELESS_KEY = stor.getdata((64*3)+1,length)
+	
+	length=asc(stor.getdata(64*4,1))
+	WLN_IP = stor.getdata((64*4)+1,length)
+	
+	net.ip=ETHERNET_IP
+	
+	'----- Set up outgoing GPRS test connection
+	
+	tcp_sock_o=sock_get("TCPA")
+	sock.num=tcp_sock_o
+	sock.txbuffrq(1)
+	sock.rxbuffrq(1)
+	sys.buffalloc
+	sock.protocol=PL_SOCK_PROTOCOL_TCP
+	sock.targetip=REMOTE_IP
+	sock.targetport=REMOTE_PORT
+	sock.targetinterface=PL_SOCK_INTERFACE_PPP
+	res=gprs_start(GPRS_AT_DT_COMMAND, GPRS_APN, GPRS_USERNAME, GPRS_PASSWORD)
+
+
+	
+	'----- Set up web interface. Request memory for RX, TX, and VAR buffers on 4 sockets
+	
+	for f = 0 to 3
+		
+		sock.num = sock_get(str(f))
+		sock.rxbuffrq(1)
+		sock.txbuffrq(1)
+		sock.varbuffrq(1)
+		sock.protocol=PL_SOCK_PROTOCOL_TCP
+		sock.inconmode=PL_SOCK_INCONMODE_ANY_IP_ANY_PORT
+		sock.httpportlist="80"
+		
+	next f
+	
+	sys.buffalloc 
+	
+
+	'----- Start WLN. No security is used in this example. For information on setting up WPA2 security, see WLN library documentation
+	
+	wln_start(WLN_NAME,WLN_SECURITY_MODE_DISABLED,WIRELESS_KEY,PL_WLN_DOMAIN_FCC,YES,PL_WLN_ASCAN_INFRASTRUCTURE) 
+	wln.ip=WLN_IP
+	
+
+end sub
+
+'----- The settings are saved onto the EEPROM of the device. The first 5 bytes are initially compared with the string "TIBBO" as a flag. 
+'----- If this flag has already been written to the EEPROM, it is not necessary to write to the EEPROM aggain. If not, the flag is written along with the values for the settings.
+'----- These settings can now be read and modified using the web interface. In this example, only 4 WLN settings have been used but more can be added.
+'----- Some settings will only take effect after a reboot.
+
+sub process_EEPROM(WLN_NAME as string,ETHERNET_IP as string,WIRELESS_KEY as string,WLN_IP as string)
+	
+	dim s as string
+	dim length as byte
+		
+		stor.setdata("TIBBO",1)
+		
+		s=chr(len(WLN_NAME))
+		stor.setdata(s,(64*1))
+		stor.setdata(WLN_NAME,(64*1)+1)
+		
+		s=chr(len(ETHERNET_IP))
+		stor.setdata(s,(64*2))
+		stor.setdata(ETHERNET_IP,(64*2)+1)
+		
+		s=chr(len(WIRELESS_KEY))
+		stor.setdata(s,(64*3))
+		stor.setdata(WIRELESS_KEY,(64*3)+1)	
+		
+		s=chr(len(WLN_IP))
+		stor.setdata(s,(64*4))
+		stor.setdata(WLN_IP,(64*4)+1)
+				
+end sub
+
+'----- If the MD button is held for more than 4 seconds, upon releasing the settings in the EEPROM will be restored to their default values
+
+sub on_button_released()
+
+	dim s as string
+
+	if button.time>4 then
+		WLN_NAME="NETGEAR"
+		WIRELESS_KEY =""				
+		ETHERNET_IP="192.168.1.200"	
+		WLN_IP="192.168.1.201"
+		
+		s=chr(len(WLN_NAME))
+		stor.setdata(s,(64*1))
+		stor.setdata(WLN_NAME,(64*1)+1)
+		
+		s=chr(len(ETHERNET_IP))
+		stor.setdata(s,(64*2))
+		stor.setdata(ETHERNET_IP,(64*2)+1)
+		
+		s=chr(len(WIRELESS_KEY))
+		stor.setdata(s,(64*3))
+		stor.setdata(WIRELESS_KEY,(64*3)+1)	
+		
+		s=chr(len(WLN_IP))
+		stor.setdata(s,(64*4))
+		stor.setdata(WLN_IP,(64*4)+1)
+	
+		beep.divider=11111
+		beep.play("B-B-B",PL_BEEP_CANINT)
+	
+	end if
+
+end sub
+
+'-----This function checks the username and password combination entered on the login page matches one of the possible three combinations.
+
+public function get_password(byref user_name as string) as string
+
+	select case user_name
+	case "admin":
+		get_password = "admin"
+	case "tibbo":
+		get_password = "1234"
+	case "guest":
+		get_password = "qwerty"
+	end select
+end function
+
+
+'-----This function parses "HTTP variables" supplied in the HTTP POST request after login and extracts the relevant information that has been typed into the HTML form.
+
+public function get_http_argument(byref http_req_string as string, byref argument as string) as string
+
+	dim x, y as byte
+	
+	x = instr(1, http_req_string, argument,1)
+	if (x = 0) then
+		get_http_argument = ""
+		exit function
+	end if
+	
+	x = x + len(argument)
+	
+	y = instr(x, http_req_string, "&",1)
+	if (y = 0) then
+		y = instr(x, http_req_string, " ",1)	
+		if (y = 0) then
+			y = len(argument)
+		end if
+	end if
+	
+	get_http_argument = mid(http_req_string, x, y - x)
+end function
+
+
+
+sub on_sys_timer()
+	
+	gprs_proc_timer()
+		sock.num=tcp_sock_o
+	if sock.statesimple=PL_SSTS_EST then
+		sock.setdata("ABC")
+		sock.send
+	end if
+	
+
+	
+	wln_proc_timer()
+	
+
+end sub
+
+sub on_ser_data_arrival()
+
+	gprs_proc_ser_data()
+
+end sub
+
+sub on_sock_data_arrival()
+
+	dim s as string(32)
+	gprs_proc_sock_data()
+	if sock.num=tcp_sock_o then
+         s=sock.getdata(255)
+         pat.play("-***",PL_PAT_CANINT)
+	end if
+
+	wln_proc_data() 
+	
+end sub
+
+sub on_sock_event(newstate as pl_sock_state, newstatesimple as pl_sock_state_simple)
+
+	'----- Monitors outgoing test connection
+	if sock.num=tcp_sock_o then
+		pat.play("-***",PL_PAT_CANINT)
+	end if
+
+
+end sub
+
+sub on_pat()
+
+	'----- Monitors outgoing test connection
+	sock.num=tcp_sock_o
+	if sock.statesimple=PL_SSTS_EST then
+		pat.play("G~",PL_PAT_CANINT)
+	end if
+
+end sub
+
+sub on_wln_task_complete(completed_task as pl_wln_tasks)
+	wln_proc_task_complete(completed_task) 'see WLN lib docs
+end sub
+
+sub on_wln_event(wln_event as pl_wln_events)
+	wln_proc_event(wln_event)
+end sub
+
+

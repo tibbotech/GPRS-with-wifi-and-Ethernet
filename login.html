@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+	<BODY>
+		<?	'This is BASIC code
+			include "global.tbh"
+		
+			dim http_req_string as string
+			dim user_name as string
+			dim password as string
+			
+			http_req_string = sock.gethttprqstring(100)+" "		'we add the empty space after the http_req_string so that our parsing function will work correctly under POST.
+			
+			user_name = get_http_argument(http_req_string, "user_name=")
+			password = get_http_argument(http_req_string, "password=")
+			
+			if user_name<>"" and (password = get_password(user_name)) then 
+				sock.setdata("WELCOME, "+user_name+"!")?>
+			
+			<br><br>
+			<form action="/settings.html">
+			<input type="submit" value="Settings Configuration" />
+			</form>
+			
+			<?
+				
+			else
+				sock.setdata("ACCESS DENIED!")
+			?>	
+			
+			<br><br>	
+			
+			<form action="/index.html">
+			<input type="submit" value="Retry Login" />
+			</form>
+				
+			<?
+			end if
+			
+			sock.send
+			
+			
+		?>
+	</BODY>
+</HTML>

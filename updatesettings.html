@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+	<BODY>
+		<?	include "global.tbh"
+		
+			dim http_req_string as string
+			dim length as byte
+			dim s as string
+'			dim WLN_NAME as string
+'			dim ETHERNET_IP as string
+'			dim WIRELESS_KEY as string
+'			dim WLN_IP as string			
+			
+			http_req_string = sock.gethttprqstring(100)+" "		'we add the empty space after the http_req_string so that our parsing function will work correctly under POST.
+			
+			'----- The setting values are sent from the page login.html. They are then written into the EEPROM.
+			
+			WLN_NAME = get_http_argument(http_req_string, "wlnap=")
+			ETHERNET_IP = get_http_argument(http_req_string, "ethernetip=")
+			WIRELESS_KEY = get_http_argument(http_req_string, "wlnkey=")
+			WLN_IP = get_http_argument(http_req_string, "wlnip=")
+			
+			process_EEPROM(WLN_NAME,ETHERNET_IP,WIRELESS_KEY,WLN_IP)	
+		
+		?>
+			<!–– For each setting, the newly written value is read from the EEPROM and sent through the socket to appear in the relevant field
+			These values can be edited again in the text box. The modified values are then sent back to same HTML page - updatesettings.html, for processing––>
+		
+			<br><br>
+			<form action="/updatesettings.html"  method="post">
+			
+			WLN Access Point Name:<br>
+			<input type="text" name="wlnap" value="<?
+			
+				sock.setdata(WLN_NAME)
+				sock.send
+						
+			?>"><br><br>
+			
+			Ethernet IP:<br>
+			<input type="text" name="ethernetip" value="<?
+			
+				sock.setdata(ETHERNET_IP)
+				sock.send
+						
+			?>"><br><br>	
+			
+			WLN Key:<br>
+			<input type="text" name="wlnkey" value="<?
+			
+				sock.setdata(WIRELESS_KEY)
+				sock.send
+						
+			?>"><br><br>	
+			
+			
+			WLN IP:<br>
+			<input type="text" name="wlnip" value="<?
+			
+				sock.setdata(WLN_IP)
+				sock.send
+						
+			?>"><br><br>	
+							
+			<input type="submit" value="Submit">
+			</form>
+			
+			<?
+			sock.setdata("Settings Updated")
+			sock.send
+			?>
+	
+	</BODY>
+</HTML>

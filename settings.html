@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+	<BODY>
+		<?	'For each setting, the value is read from the EEPROM and sent through the socket to appear in the relevant field
+			'These values can then be edited in the text box. The modified values are then sent to the HTML page updatesettings.html for processing
+			include "global.tbh"
+			dim length as byte
+
+		?>
+				
+				
+			<br><br>
+			<form action="/updatesettings.html"  method="post">
+			
+			WLN Access Point Name:<br>
+			<input type="text" name="wlnap" value="<?
+				
+				length=asc(stor.getdata(64*1,1))
+				WLN_NAME = stor.getdata((64*1)+1,length)
+				sock.setdata(WLN_NAME)
+				sock.send
+						
+			?>"><br><br>
+			
+			Ethernet IP:<br>
+			<input type="text" name="ethernetip" value="<?
+			
+				length=asc(stor.getdata(64*2,1))
+				ETHERNET_IP = stor.getdata((64*2)+1,length)
+				sock.setdata(ETHERNET_IP)
+				sock.send
+						
+			?>"><br><br>	
+			
+			WLN Key:<br>
+			<input type="text" name="wlnkey" value="<?
+			
+				length=asc(stor.getdata(64*3,1))
+				WIRELESS_KEY = stor.getdata((64*3)+1,length)
+				sock.setdata(WIRELESS_KEY)
+				sock.send
+						
+			?>"><br><br>	
+			
+			
+			WLN IP:<br>
+			<input type="text" name="wlnip" value="<?
+			
+				length=asc(stor.getdata(64*4,1))
+				WLN_IP= stor.getdata((64*4)+1,length)
+				sock.setdata(WLN_IP)
+				sock.send
+						
+			?>"><br><br>	
+			
+			<input type="submit" value="Submit">
+			</form>
+		
+	</BODY>
+</HTML>
