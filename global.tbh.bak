@@ -1,0 +1,35 @@
+'DEFINES-------------------------------------------------------------
+#define SUPPORTS_GPRS 1
+#define GPRS_DEBUG_PRINT 1
+#define GPRS_PAYLOAD_SIZE 1
+#define WLN_DEBUG_PRINT 1
+#define WLN_AVAILABLE 1
+#define GPRS_SER_PORT 0
+#define GPRS_RESET PL_IO_NUM_1
+#define GPRS_POWER PL_IO_NUM_10_RX1
+
+'Define Constants for WLN library
+#define WLN_CLK PL_IO_NUM_53
+#define WLN_CS PL_IO_NUM_49
+#define WLN_DI PL_IO_NUM_52
+#define WLN_DO PL_IO_NUM_50
+#define WLN_RST PL_IO_NUM_51
+
+
+'INCLUDES------------------------------------------------------------
+include "sock\trunk\sock.tbh"
+include "wln\trunk\wln.tbh"
+include "gprs\trunk\gprs.tbh"
+
+'DECLARATIONS--------------------------------------------------------
+
+
+declare tcp_sock_o as byte
+declare function get_password(byref user_name as string) as string
+declare function get_http_argument(byref http_req_string as string, byref argument as string) as string
+declare sub process_EEPROM(WLN_NAME as string,ETHERNET_IP as string,WIRELESS_KEY as string,WLN_IP as string)
+
+declare WLN_NAME as string
+declare WIRELESS_KEY as string
+declare ETHERNET_IP as string
+declare WLN_IP as string
