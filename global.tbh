@@ -4,9 +4,8 @@
 #define GPRS_PAYLOAD_SIZE 1
 #define WLN_DEBUG_PRINT 1
 #define WLN_AVAILABLE 1
-#define GPRS_SER_PORT 0
-#define GPRS_RESET PL_IO_NUM_1
-#define GPRS_POWER PL_IO_NUM_10_RX1
+#define GPRS_SER_PORT 2
+ 
 
 'Define Constants for WLN library
 #define WLN_CLK PL_IO_NUM_53
